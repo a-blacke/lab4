@@ -56,6 +56,13 @@
 
 function processData(data, callback) {
   // Your implementation here
+  setTimeout(() => {
+    if (data.includes("error")) {
+      callback(new Error("process data error"), undefined)
+    } else {
+      callback(null, data.toUpperCase());
+    }
+  }, 125)
 }
 
 /**
@@ -115,8 +122,33 @@ const fs = require("fs");
  * @param {Object} studentInfo - An object containing the student's first name, surname, age, and hobbies.
  * @param {Function} callback - A callback function that handles the result of the file operation.
  */
+
 function createStudentFile(studentName, studentInfo, callback) {
-  // Your implementation here
+  // Convert studentName to camelCase for the filename
+  const filename =
+    studentName
+      .split(" ")
+      .map((part, index) =>
+        index === 0
+          ? part.toLowerCase()
+          : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+      )
+      .join("") + ".txt";
+  // Check if the file already exists
+  if (fs.existsSync(filename)) {
+    return callback(new Error("File exists"));
+  }
+  // Validate student information matches the name
+  const fullName = `${studentInfo.firstName} ${studentInfo.surName}`;
+  if (studentName !== fullName) {
+    return callback(new Error("Wrong Information"));
+  }
+  // Prepare the content for the file
+  const content = `Name: ${studentName}\nAge: ${
+    studentInfo.age
+  }\nHobby: ${studentInfo.hobby.join(", ")}`;
+  // Write the content to the file
+  fs.writeFile(filename, content, callback);
 }
 
 /**
@@ -155,6 +187,16 @@ function createStudentFile(studentName, studentInfo, callback) {
 
 function loadUserData(userId) {
   // Your implementation here
+  return new Promise(function(resolve, reject) {
+    setTimeout(() => {
+      if (userId > 0)
+      {
+        resolve({ id: userId, name: 'John Doe'});
+      } else {
+        reject(new Error("Invalid user ID"));
+      }
+    }, 100)
+  })
 }
 
 /**
@@ -198,8 +240,25 @@ function loadUserData(userId) {
  */
 
 async function fetchUserDetails(userId) {
-  // Your implementation here
+  try {
+    // Create the promise and use 'await' to wait for it to settle
+    const user = await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (userId > 0) {
+          resolve({ id: userId, name: 'Jane Doe' });
+        } else {
+          reject(new Error("Invalid user ID"));
+        }
+      }, 100);
+    });
+
+    return user;
+
+  } catch (error) {
+    throw error;
+  }
 }
+
 
 /**
  * Exercise 5: Check Tic-Tac-Toe Game State
@@ -238,8 +297,32 @@ async function fetchUserDetails(userId) {
 
 function checkState(board) {
   // Your implementation here
+  const winCond = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  const xWin = winCond.some((cond) => cond.every((p) => board[p] === "X"));
+  if (xWin) return "X wins";
+  const oWin = winCond.some((cond) => cond.every((p) => board[p] === "O"));
+  if (oWin) return "O wins";
+  const [xMoves, oMoves] = board.reduce(
+    (a, c) => {
+      if (c === "X") return [a[0] + 1, a[1]];
+      if (c === "O") return [a[0], a[1] + 1];
+      return a;
+    },
+    [0, 0],
+  );
+  if (xMoves + oMoves === 9) return "It is a tie";
+  if (xMoves > oMoves) return "O to play";
+  return "X to play";
 }
-
 module.exports = {
   processData,
   createStudentFile,
